@@ -134,6 +134,10 @@ typedef void * Lib3MF_pvoid;
 #define LIB3MF_ERROR_KEYSTORECONSUMERNOTFOUND 3002
 #define LIB3MF_ERROR_KEYSTORERESOURCEDATANOTFOUND 3003
 #define LIB3MF_ERROR_SECURECONTEXTNOTREGISTERED 3004
+#define LIB3MF_ERROR_CUSTOMINFORMATIONNOTFOUND 3005
+#define LIB3MF_ERROR_INVALIDCUSTOMNAMESPACE 3006
+#define LIB3MF_ERROR_INVALIDCUSTOMNAME 3007
+#define LIB3MF_ERROR_INVALIDINITVECTOR 3008
 
 /*************************************************************************************************************************
  Declaration of handle classes 

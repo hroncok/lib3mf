@@ -307,10 +307,16 @@ type Lib3MFImplementation struct {
 	Lib3MF_resourcedata_getencryptionalgorithm uintptr
 	Lib3MF_resourcedata_getcompression uintptr
 	Lib3MF_resourcedata_getadditionalauthenticationdata uintptr
+	Lib3MF_resourcedata_getcustominitvector uintptr
+	Lib3MF_resourcedata_setcustominitvector uintptr
 	Lib3MF_resourcedatagroup_getkeyuuid uintptr
 	Lib3MF_resourcedatagroup_addaccessright uintptr
 	Lib3MF_resourcedatagroup_findaccessrightbyconsumer uintptr
 	Lib3MF_resourcedatagroup_removeaccessright uintptr
+	Lib3MF_resourcedatagroup_addcustominformation uintptr
+	Lib3MF_resourcedatagroup_hascustominformation uintptr
+	Lib3MF_resourcedatagroup_removecustominformation uintptr
+	Lib3MF_resourcedatagroup_getcustominformation uintptr
 	Lib3MF_keystore_addconsumer uintptr
 	Lib3MF_keystore_getconsumercount uintptr
 	Lib3MF_keystore_getconsumer uintptr
@@ -572,6 +578,10 @@ func GetLib3MFErrorMessage(errorcode uint32) (string) {
 	case 3002: return "KEYSTORECONSUMERNOTFOUND";
 	case 3003: return "KEYSTORERESOURCEDATANOTFOUND";
 	case 3004: return "SECURECONTEXTNOTREGISTERED";
+	case 3005: return "CUSTOMINFORMATIONNOTFOUND";
+	case 3006: return "INVALIDCUSTOMNAMESPACE";
+	case 3007: return "INVALIDCUSTOMNAME";
+	case 3008: return "INVALIDINITVECTOR";
 	default:
 		return "unknown";
 	}
@@ -1889,6 +1899,16 @@ func (implementation *Lib3MFImplementation) Initialize(DLLFileName string) error
 		return errors.New("Could not get function lib3mf_resourcedata_getadditionalauthenticationdata: " + err.Error())
 	}
 	
+	implementation.Lib3MF_resourcedata_getcustominitvector, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedata_getcustominitvector")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedata_getcustominitvector: " + err.Error())
+	}
+	
+	implementation.Lib3MF_resourcedata_setcustominitvector, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedata_setcustominitvector")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedata_setcustominitvector: " + err.Error())
+	}
+	
 	implementation.Lib3MF_resourcedatagroup_getkeyuuid, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_getkeyuuid")
 	if (err != nil) {
 		return errors.New("Could not get function lib3mf_resourcedatagroup_getkeyuuid: " + err.Error())
@@ -1907,6 +1927,26 @@ func (implementation *Lib3MFImplementation) Initialize(DLLFileName string) error
 	implementation.Lib3MF_resourcedatagroup_removeaccessright, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_removeaccessright")
 	if (err != nil) {
 		return errors.New("Could not get function lib3mf_resourcedatagroup_removeaccessright: " + err.Error())
+	}
+	
+	implementation.Lib3MF_resourcedatagroup_addcustominformation, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_addcustominformation")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedatagroup_addcustominformation: " + err.Error())
+	}
+	
+	implementation.Lib3MF_resourcedatagroup_hascustominformation, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_hascustominformation")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedatagroup_hascustominformation: " + err.Error())
+	}
+	
+	implementation.Lib3MF_resourcedatagroup_removecustominformation, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_removecustominformation")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedatagroup_removecustominformation: " + err.Error())
+	}
+	
+	implementation.Lib3MF_resourcedatagroup_getcustominformation, err = syscall.GetProcAddress(dllHandle, "lib3mf_resourcedatagroup_getcustominformation")
+	if (err != nil) {
+		return errors.New("Could not get function lib3mf_resourcedatagroup_getcustominformation: " + err.Error())
 	}
 	
 	implementation.Lib3MF_keystore_addconsumer, err = syscall.GetProcAddress(dllHandle, "lib3mf_keystore_addconsumer")
@@ -7160,6 +7200,47 @@ func (implementation *Lib3MFImplementation) ResourceData_GetAdditionalAuthentica
 	return bufferByteData, err
 }
 
+func (implementation *Lib3MFImplementation) ResourceData_GetCustomInitVector(ResourceData Lib3MFHandle) ([]uint8, error) {
+	var err error = nil
+	var neededforIV int64 = 0
+	var filledinIV int64 = 0
+	bufferIV := make([]uint8, 0)
+	
+	implementation_resourcedata, err := implementation.GetWrapperHandle(ResourceData)
+	if (err != nil) {
+		return make([]uint8, 0), err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedata_getcustominitvector, implementation_resourcedata.GetDLLInHandle(), Int64InValue(0), Int64OutValue(&neededforIV), Int64InValue(0))
+	if (err != nil) {
+		return make([]uint8, 0), err
+	}
+	bufferSizeIV := neededforIV
+	bufferIV = make([]uint8, bufferSizeIV)
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedata_getcustominitvector, implementation_resourcedata.GetDLLInHandle(), Int64InValue(bufferSizeIV), Int64OutValue(&filledinIV), uintptr(unsafe.Pointer(&bufferIV[0])))
+	if (err != nil) {
+		return make([]uint8, 0), err
+	}
+	
+	return bufferIV, err
+}
+
+func (implementation *Lib3MFImplementation) ResourceData_SetCustomInitVector(ResourceData Lib3MFHandle, IV []uint8) (error) {
+	var err error = nil
+	
+	implementation_resourcedata, err := implementation.GetWrapperHandle(ResourceData)
+	if (err != nil) {
+		return err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedata_setcustominitvector, implementation_resourcedata.GetDLLInHandle(), 0, 0)
+	if (err != nil) {
+		return err
+	}
+	
+	return err
+}
+
 func (implementation *Lib3MFImplementation) ResourceDataGroup_GetKeyUUID(ResourceDataGroup Lib3MFHandle) (string, error) {
 	var err error = nil
 	var neededforUUID int64 = 0
@@ -7262,6 +7343,80 @@ func (implementation *Lib3MFImplementation) ResourceDataGroup_RemoveAccessRight(
 	}
 	
 	return err
+}
+
+func (implementation *Lib3MFImplementation) ResourceDataGroup_AddCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string, sValue string) (error) {
+	var err error = nil
+	
+	implementation_resourcedatagroup, err := implementation.GetWrapperHandle(ResourceDataGroup)
+	if (err != nil) {
+		return err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedatagroup_addcustominformation, implementation_resourcedatagroup.GetDLLInHandle(), StringInValue(sNameSpace), StringInValue(sName), StringInValue(sValue))
+	if (err != nil) {
+		return err
+	}
+	
+	return err
+}
+
+func (implementation *Lib3MFImplementation) ResourceDataGroup_HasCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (bool, error) {
+	var err error = nil
+	var bHasValue int64 = 0
+	
+	implementation_resourcedatagroup, err := implementation.GetWrapperHandle(ResourceDataGroup)
+	if (err != nil) {
+		return false, err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedatagroup_hascustominformation, implementation_resourcedatagroup.GetDLLInHandle(), StringInValue(sNameSpace), StringInValue(sName), Int64OutValue(&bHasValue))
+	if (err != nil) {
+		return false, err
+	}
+	
+	return (bHasValue != 0), err
+}
+
+func (implementation *Lib3MFImplementation) ResourceDataGroup_RemoveCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (bool, error) {
+	var err error = nil
+	var bValueExisted int64 = 0
+	
+	implementation_resourcedatagroup, err := implementation.GetWrapperHandle(ResourceDataGroup)
+	if (err != nil) {
+		return false, err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedatagroup_removecustominformation, implementation_resourcedatagroup.GetDLLInHandle(), StringInValue(sNameSpace), StringInValue(sName), Int64OutValue(&bValueExisted))
+	if (err != nil) {
+		return false, err
+	}
+	
+	return (bValueExisted != 0), err
+}
+
+func (implementation *Lib3MFImplementation) ResourceDataGroup_GetCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (string, error) {
+	var err error = nil
+	var neededforValue int64 = 0
+	var filledinValue int64 = 0
+	
+	implementation_resourcedatagroup, err := implementation.GetWrapperHandle(ResourceDataGroup)
+	if (err != nil) {
+		return "", err
+	}
+
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedatagroup_getcustominformation, implementation_resourcedatagroup.GetDLLInHandle(), StringInValue(sNameSpace), StringInValue(sName), Int64InValue(0), Int64OutValue(&neededforValue), Int64InValue(0))
+	if (err != nil) {
+		return "", err
+	}
+	bufferSizeValue := neededforValue
+	bufferValue := make([]byte, bufferSizeValue)
+	err = implementation.CallFunction(implementation.Lib3MF_resourcedatagroup_getcustominformation, implementation_resourcedatagroup.GetDLLInHandle(), StringInValue(sNameSpace), StringInValue(sName), Int64InValue(bufferSizeValue), Int64OutValue(&filledinValue), uintptr(unsafe.Pointer(&bufferValue[0])))
+	if (err != nil) {
+		return "", err
+	}
+	
+	return string(bufferValue[:(filledinValue-1)]), err
 }
 
 func (implementation *Lib3MFImplementation) KeyStore_AddConsumer(KeyStore Lib3MFHandle, sConsumerID string, sKeyID string, sKeyValue string) (Lib3MFHandle, error) {

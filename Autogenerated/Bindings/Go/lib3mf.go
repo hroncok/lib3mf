@@ -2665,6 +2665,24 @@ type Lib3MFGoInterface interface {
 
 
 	/**
+	* Gets the custom Initialization Vector (in base64)
+	*
+	* @param[in] ResourceData - ResourceData instance.
+	* @return The Initialization Vector encoded in base 64. Empty string if none is set.
+	*/
+	ResourceData_GetCustomInitVector(ResourceData Lib3MFHandle) ([]uint8, error)
+
+
+	/**
+	* Sets a custom Initialization Vector (in base64)
+	*
+	* @param[in] ResourceData - ResourceData instance.
+	* @param[in] IV - The new Initialization Vector encoded in base 64. Empty string if none shall be used.
+	*/
+	ResourceData_SetCustomInitVector(ResourceData Lib3MFHandle, IV []uint8) (error)
+
+
+	/**
 	* Sets the resourcedatagroup keyuuid
 	*
 	* @param[in] ResourceDataGroup - ResourceDataGroup instance.
@@ -2703,6 +2721,50 @@ type Lib3MFGoInterface interface {
 	* @param[in] Consumer - The Consumer instance
 	*/
 	ResourceDataGroup_RemoveAccessRight(ResourceDataGroup Lib3MFHandle, Consumer Lib3MFHandle) (error)
+
+
+	/**
+	* Adds a custom information string to the resource data group. Overwrites existing value with same name.
+	*
+	* @param[in] ResourceDataGroup - ResourceDataGroup instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @param[in] sValue - Information string value to add.
+	*/
+	ResourceDataGroup_AddCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string, sValue string) (error)
+
+
+	/**
+	* Checks for a custom information string of the resource data group
+	*
+	* @param[in] ResourceDataGroup - ResourceDataGroup instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @return Information string value exists.
+	*/
+	ResourceDataGroup_HasCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (bool, error)
+
+
+	/**
+	* Removes a custom information string of the resource data group
+	*
+	* @param[in] ResourceDataGroup - ResourceDataGroup instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @return Information string value existed.
+	*/
+	ResourceDataGroup_RemoveCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (bool, error)
+
+
+	/**
+	* Gets a custom information string to the resource data group. Fails if not existing.
+	*
+	* @param[in] ResourceDataGroup - ResourceDataGroup instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @return Information string value.
+	*/
+	ResourceDataGroup_GetCustomInformation(ResourceDataGroup Lib3MFHandle, sNameSpace string, sName string) (string, error)
 
 
 	/**
@@ -5548,6 +5610,16 @@ func (instance *Lib3MFResourceData) GetAdditionalAuthenticationData() ([]uint8, 
 	return bufferByteData, error
 }
 
+func (instance *Lib3MFResourceData) GetCustomInitVector() ([]uint8, error) {
+	bufferIV, error := instance.Interface.ResourceData_GetCustomInitVector(instance.Handle)
+	return bufferIV, error
+}
+
+func (instance *Lib3MFResourceData) SetCustomInitVector(IV []uint8) (error) {
+	error := instance.Interface.ResourceData_SetCustomInitVector(instance.Handle, IV)
+	return error
+}
+
 
 /*************************************************************************************************************************
 Class definition Lib3MFResourceDataGroup
@@ -5585,6 +5657,26 @@ func (instance *Lib3MFResourceDataGroup) FindAccessRightByConsumer(Consumer Lib3
 func (instance *Lib3MFResourceDataGroup) RemoveAccessRight(Consumer Lib3MFHandle) (error) {
 	error := instance.Interface.ResourceDataGroup_RemoveAccessRight(instance.Handle, Consumer)
 	return error
+}
+
+func (instance *Lib3MFResourceDataGroup) AddCustomInformation(sNameSpace string, sName string, sValue string) (error) {
+	error := instance.Interface.ResourceDataGroup_AddCustomInformation(instance.Handle, sNameSpace, sName, sValue)
+	return error
+}
+
+func (instance *Lib3MFResourceDataGroup) HasCustomInformation(sNameSpace string, sName string) (bool, error) {
+	bHasValue, error := instance.Interface.ResourceDataGroup_HasCustomInformation(instance.Handle, sNameSpace, sName)
+	return bHasValue, error
+}
+
+func (instance *Lib3MFResourceDataGroup) RemoveCustomInformation(sNameSpace string, sName string) (bool, error) {
+	bValueExisted, error := instance.Interface.ResourceDataGroup_RemoveCustomInformation(instance.Handle, sNameSpace, sName)
+	return bValueExisted, error
+}
+
+func (instance *Lib3MFResourceDataGroup) GetCustomInformation(sNameSpace string, sName string) (string, error) {
+	sValue, error := instance.Interface.ResourceDataGroup_GetCustomInformation(instance.Handle, sNameSpace, sName)
+	return sValue, error
 }
 
 
