@@ -2629,6 +2629,37 @@ type Lib3MFGoInterface interface {
 
 
 	/**
+	* Returns the path of the package part, if applicable.
+	*
+	* @param[in] ContentEncryptionParams - ContentEncryptionParams instance.
+	* @return 
+	*/
+	ContentEncryptionParams_GetPackagePath(ContentEncryptionParams Lib3MFHandle) (string, error)
+
+
+	/**
+	* Checks for a custom information string of the resource data group
+	*
+	* @param[in] ContentEncryptionParams - ContentEncryptionParams instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @return Information string value exists.
+	*/
+	ContentEncryptionParams_HasCustomInformation(ContentEncryptionParams Lib3MFHandle, sNameSpace string, sName string) (bool, error)
+
+
+	/**
+	* Gets a custom information string to the resource data group. Fails if not existing.
+	*
+	* @param[in] ContentEncryptionParams - ContentEncryptionParams instance.
+	* @param[in] sNameSpace - A proper XML namespace for the Information.
+	* @param[in] sName - A proper name for the Information. Only alphanumerical characters are allowed, not starting with a number.
+	* @return Information string value.
+	*/
+	ContentEncryptionParams_GetCustomInformation(ContentEncryptionParams Lib3MFHandle, sNameSpace string, sName string) (string, error)
+
+
+	/**
 	* Gets the encrypted part path
 	*
 	* @param[in] ResourceData - ResourceData instance.
@@ -5572,6 +5603,21 @@ func (instance *Lib3MFContentEncryptionParams) GetDescriptor() (uint64, error) {
 func (instance *Lib3MFContentEncryptionParams) GetKeyUUID() (string, error) {
 	sUUID, error := instance.Interface.ContentEncryptionParams_GetKeyUUID(instance.Handle)
 	return sUUID, error
+}
+
+func (instance *Lib3MFContentEncryptionParams) GetPackagePath() (string, error) {
+	sPath, error := instance.Interface.ContentEncryptionParams_GetPackagePath(instance.Handle)
+	return sPath, error
+}
+
+func (instance *Lib3MFContentEncryptionParams) HasCustomInformation(sNameSpace string, sName string) (bool, error) {
+	bHasValue, error := instance.Interface.ContentEncryptionParams_HasCustomInformation(instance.Handle, sNameSpace, sName)
+	return bHasValue, error
+}
+
+func (instance *Lib3MFContentEncryptionParams) GetCustomInformation(sNameSpace string, sName string) (string, error) {
+	sValue, error := instance.Interface.ContentEncryptionParams_GetCustomInformation(instance.Handle, sNameSpace, sName)
+	return sValue, error
 }
 
 
